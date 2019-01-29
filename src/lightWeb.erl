@@ -8,15 +8,14 @@ start(Handler) ->
 					   {reuseaddr, true}
 					  ]),
     io:format("Server Start by: ~p~n", [ServerSock]),
-    %% spawn(?MODULE, pre_connect, [ServerSock, Handler]).
     spawn(?MODULE, pre_connect, [ServerSock, Handler]).
 
 
 pre_connect(ServerSock, Handler) ->
     case gen_tcp:accept(ServerSock) of
 	{ok, ClientSock} ->
-	    do_recv(ClientSock, Handler),
-	    spawn(?MODULE, pre_connect, [ServerSock, Handler]);
+	    spawn(?MODULE, pre_connect, [ServerSock, Handler]),
+	    do_recv(ClientSock, Handler);
 	{error, Msg} ->
 	    io:format("Error: ~p~n", [Msg])
     end.
