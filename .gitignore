@@ -12,3 +12,4 @@ rel/example_project
 *.cmd
 *.bat
 bak/
+ebin/*.app
