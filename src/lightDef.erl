@@ -1,0 +1,2 @@
+-module(lightDef).
+-callback handler(Data :: map()) -> list().
