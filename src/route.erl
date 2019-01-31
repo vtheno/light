@@ -12,5 +12,5 @@ handler(#{uri := Uri, method := Method}) when (Uri == "/") and (Method == "GET")
 			 "",
 			 "index"]);
 handler(_) ->
-    light:stream_format(["HTTP/1.1 404 Page Not Found",
+    light:stream_format(["HTTP/1.1 404 Not Found",
 			 ""]).
