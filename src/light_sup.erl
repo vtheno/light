@@ -24,7 +24,7 @@ start_link() ->
 
 init([]) ->
     io:format("inited.~n"),
-    lightWeb:start(fun route:handler/1),
-    io:format("started.~n"),
+    light:start(fun route:handler/1),
+    io:format("light started.~n"),
     {ok, { {one_for_one, 5, 10}, []} }.
 

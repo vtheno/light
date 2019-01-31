@@ -11,5 +11,7 @@ rel/example_project
 # backup and command
 *.cmd
 *.bat
+*.pem
+*~
 bak/
-ebin/*.app
+ebin/
