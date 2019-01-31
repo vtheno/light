@@ -14,8 +14,12 @@ pre_connect(ServerSock, Handler) ->
     case ssl:transport_accept(ServerSock) of
 	{ok, TransportSock} ->
 	    spawn(?MODULE, pre_connect, [ServerSock, Handler]),
-	    {ok, ClientSock} = ssl:handshake(TransportSock),
-	    do_recv(ClientSock, Handler);
+	    case ssl:handshake(TransportSock) of
+		{ok, ClientSock} ->
+		    do_recv(ClientSock, Handler);
+		{error, Msg} ->
+		    io:format("Error: ~p~n", [Msg])
+	    end;
 	{error, Msg} ->
 	    io:format("Error: ~p~n", [Msg])
     end.
