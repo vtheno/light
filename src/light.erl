@@ -12,13 +12,37 @@ start(Handler) ->
 
 pre_connect(ServerSock, Handler) ->
     case ssl:transport_accept(ServerSock) of
-	{ok, TranslateSock} ->
-	    spawn(?MODULE, pre_connect, [ServerSock]),
-	    {ok, ClientSock} = ssl:handshake(TranslateSock),
+	{ok, TransportSock} ->
+	    spawn(?MODULE, pre_connect, [ServerSock, Handler]),
+	    {ok, ClientSock} = ssl:handshake(TransportSock),
 	    do_recv(ClientSock, Handler);
 	{error, Msg} ->
 	    io:format("Error: ~p~n", [Msg])
     end.
+
+do_recv(ClientSock, Handler) ->
+    io:format("~p~n",[ClientSock]),
+    receive
+	{ssl, _, Binary} ->
+	    case parse(Binary) of
+		{ok, Data} -> 
+		    %% io:format("~p~n", [Data]),
+		    case ssl:send(ClientSock, Handler(Data)) of
+			ok ->
+			    io:format("send.~n"),
+			    ok = ssl:close(ClientSock);
+			{error, _} ->
+			    ok = ssl:close(ClientSock)
+		    end;
+		{error, _} -> 
+		    ok = ssl:close(ClientSock),
+		    error
+	    end;
+	{ssl_close, _} ->
+	    io:format("close ssl."),
+	    ok = ssl:close(ClientSock)
+    end,
+    do_recv(ClientSock, Handler).
 
 %% datatype msg = ok | error
 %% parse : string -> msg * map
@@ -41,25 +65,3 @@ parse(_) ->
 
 stream_format([Head|Tail]) -> Head ++ "\r\n" ++ stream_format(Tail);
 stream_format([]) -> [].
-
-do_recv(ClientSock, Handler) ->
-    io:format("~p~n",[ClientSock]),
-    receive
-	{ssl, _, Binary} ->
-	    case parse(Binary) of
-		{ok, Data} -> 
-		    %% io:format("~p~n", [Data]),
-		    case ssl:send(ClientSock, Handler(Data)) of
-			ok ->
-			    ok = ssl:close(ClientSock);
-			{error, _} ->
-			    ok = ssl:close(ClientSock)
-		    end;
-		{error, _} -> 
-		    ok = ssl:close(ClientSock),
-		    error
-	    end;
-	{ssl_close, _} ->
-	    io:format("close ssl."),
-	    ok = ssl:close(ClientSock)
-    end.
