@@ -3,7 +3,9 @@
 
 start(Handler) ->
     ssl:start(), 
-    {ok, ServerSock} = ssl:listen(443, [{certfile, "ca.pem"}, 
+    {ok, ServerSock} = ssl:listen(443, [
+					{cacertfile, "certs.pem"},
+					{certfile, "ca.pem"}, 
 					{keyfile, "key.pem"},
 					{reuseaddr, true}
 				       ]),
