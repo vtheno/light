@@ -1,1 +1,2 @@
 -define(WEBROOT, "E:/erlang/html").
+-define(FILEROOT, "E:/erlang/file/").

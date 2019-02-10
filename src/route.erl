@@ -1,3 +1,4 @@
+%% -*- coding: utf-8 -*-
 -module(route).
 -behaviour(define).
 -spec handler(Data :: map()) -> list().
@@ -35,6 +36,12 @@ handler(#{uri := Uri, method := Method}) when Method == "GET" ->
 	    ["HTTP/1.1 404 Not Found",
 	     ""]
     end;
+handler(#{uri := Uri, method := Method,
+	  info:= Info, data := Data}) when (Method == "POST") and (Uri == "/upload") ->
+    io:format("info: ~n~p~n", [Info]),
+    %% xmerl_ucs:form_utf8(http_uri:decode(Filename))
+    ["HTTP/1.1 404 Not Found",
+     ""];
 handler(_) ->
     ["HTTP/1.1 404 Not Found",
      ""].
