@@ -22,7 +22,10 @@ handler(#{uri := Uri, method := Method}) when (Uri == "/") and (Method == "GET")
 	     Data
 	    ];
 	{error, Msg} ->
-	    io:format("get /index.html error: ~p~n", [Msg])
+	    io:format("get /index.html error: ~p~n", [Msg]),
+	    ["HTTP/1.1 404 Not Found",
+	     "Strict-Transport-Security: max-age=31536000; includeSubDomains",
+	     ""]
     end;
 handler(#{uri := Uri, method := Method}) when Method == "GET" ->
     case file:read_file(?WEBROOT ++ Uri) of
