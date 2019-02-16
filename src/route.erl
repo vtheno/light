@@ -14,6 +14,7 @@ handler(#{uri := Uri, method := Method}) when (Uri == "/") and (Method == "GET")
     Data = binary_to_list(Binary),
     Length = integer_to_list(length(Data)),
     ["HTTP/1.1 200 OK",
+     "Strict-Transport-Security: max-age=31536000; includeSubDomains",
      "Content-length: " ++ Length,
      "Content-type: text/html",
      "",
@@ -27,6 +28,7 @@ handler(#{uri := Uri, method := Method}) when Method == "GET" ->
 	    Type =  guess_type(Uri),
 	    io:format(Type ++ "~n"),
 	    ["HTTP/1.1 200 OK",
+	     "Strict-Transport-Security: max-age=31536000; includeSubDomains",
 	     "Content-length: " ++ Length,
 	     "Content-type: " ++ Type,
 	     "",
@@ -34,14 +36,17 @@ handler(#{uri := Uri, method := Method}) when Method == "GET" ->
 	    ];
 	{error, _} ->
 	    ["HTTP/1.1 404 Not Found",
+	     "Strict-Transport-Security: max-age=31536000; includeSubDomains",
 	     ""]
     end;
 handler(#{uri := Uri, method := Method,
-	  info:= Info, data := Data}) when (Method == "POST") and (Uri == "/upload") ->
+	  info:= Info}) when (Method == "POST") and (Uri == "/upload") ->
     io:format("info: ~n~p~n", [Info]),
     %% xmerl_ucs:form_utf8(http_uri:decode(Filename))
     ["HTTP/1.1 404 Not Found",
+     "Strict-Transport-Security: max-age=31536000; includeSubDomains",
      ""];
 handler(_) ->
     ["HTTP/1.1 404 Not Found",
+     "Strict-Transport-Security: max-age=31536000; includeSubDomains",
      ""].
