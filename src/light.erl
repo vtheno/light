@@ -44,7 +44,9 @@ split_recv(ClientSock, Buff, Length) ->
 	    end
     end.
 do_response(ClientSock, Handler, Ctx) ->
+    io:format("do_resp: ~p~n", [Ctx]),
     Response = stream_format(Handler(Ctx)),
+    io:format("do_resp: ~p~n", [Response]),
     case ssl:send(ClientSock, Response) of
 	ok ->
 	    %% io:format("send.~n"),

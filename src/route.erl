@@ -10,16 +10,20 @@
 %% Len = length(binary_to_list(Binary)).
 %% Erlang `Guard expression` can't use user function, but can using `pattern match` to substitution it
 handler(#{uri := Uri, method := Method}) when (Uri == "/") and (Method == "GET") ->
-    {ok, Binary} = file:read_file(?WEBROOT ++ "/index.html"),
-    Data = binary_to_list(Binary),
-    Length = integer_to_list(length(Data)),
-    ["HTTP/1.1 200 OK",
-     "Strict-Transport-Security: max-age=31536000; includeSubDomains",
-     "Content-length: " ++ Length,
-     "Content-type: text/html",
-     "",
-     Data
-     ];
+    case file:read_file(?WEBROOT ++ "/index.html") of 
+	{ok, Binary} -> 
+	    Data = binary_to_list(Binary),
+	    Length = integer_to_list(length(Data)),
+	    ["HTTP/1.1 200 OK",
+	     "Strict-Transport-Security: max-age=31536000; includeSubDomains",
+	     "Content-length: " ++ Length,
+	     "Content-type: text/html",
+	     "",
+	     Data
+	    ];
+	{error, Msg} ->
+	    io:format("get /index.html error: ~p~n", [Msg])
+    end;
 handler(#{uri := Uri, method := Method}) when Method == "GET" ->
     case file:read_file(?WEBROOT ++ Uri) of
 	{ok, Binary} ->
