@@ -31,22 +31,30 @@ header_end("\n\r\n\r" ++ _) ->
     true;
 header_end(_) ->
     false.
-split_recv(ClientSock, Buff, Length) ->
-    case length(Buff) == Length of
-	true ->
-	    {ok, Buff};
-	false ->
-	    case ssl:recv(ClientSock, 0) of
-		{ok, Data} ->
-		    split_recv(ClientSock, Buff ++ Data, Length);
-		{error, Msg} ->
-		    {error, Msg}
-	    end
+
+%% split_recv(ClientSock, Buff, Length) ->
+%%     case length(Buff) == Length of
+%%  	true ->
+%%  	    Buff;
+%%  	false ->
+%%  	    case ssl:recv(ClientSock, 0) of
+%%  		{ok, Data} ->
+%%  		    split_recv(ClientSock, Buff ++ Data, Length);
+%%  		{error, _} ->
+%% 		    []
+%% 	    end
+%%     end.
+size_recv(ClientSock, Size) ->
+    case ssl:recv(ClientSock, Size) of
+ 	{ok, Data} ->
+ 	    Data;
+ 	{error, _} ->
+ 	    []
     end.
 do_response(ClientSock, Handler, Ctx) ->
-    io:format("do_resp: ~p~n", [Ctx]),
+    %% io:format("do_resp: ~p~n", [Ctx]),
     Response = stream_format(Handler(Ctx)),
-    io:format("do_resp: ~p~n", [Response]),
+    %% io:format("do_resp: ~p~n", [Response]),
     case ssl:send(ClientSock, Response) of
 	ok ->
 	    %% io:format("send.~n"),
@@ -66,12 +74,15 @@ do_recv(ClientSock, Handler, Buff) ->
 			    #{uri:= Uri, method:= Method, info:= Info, version:= Version} = Header,
 			    case orddict:take("Content-Length", Info) of
 				{Length, _} ->
-				    io:format("Length: ~p~n", [Length]),
+				    %% io:format("Length: ~p~n", [Length]),
 				    %% too length need translate to stream
 				    %% Tail = split_recv(ClientSock, [], list_to_integer(Length)),
+				    CtxData = size_recv(ClientSock, list_to_integer(Length)),
+				    %% CtxData = split_recv(ClientSock, [], list_to_integer(Length)),
+				    %% io:format("CtxData: ~p~n", [CtxData]),
 				    Ctx = #{uri => Uri, method => Method,
 					    info => Info, version => Version,
-					    data => [] },
+					    data => CtxData },
 				    do_response(ClientSock, Handler, Ctx);
 				error -> %% no body
 				    Ctx = #{uri => Uri, method => Method,

@@ -47,12 +47,25 @@ handler(#{uri := Uri, method := Method}) when Method == "GET" ->
 	     ""]
     end;
 handler(#{uri := Uri, method := Method,
-	  info:= Info}) when (Method == "POST") and (Uri == "/upload") ->
-    io:format("info: ~n~p~n", [Info]),
-    %% xmerl_ucs:form_utf8(http_uri:decode(Filename))
-    ["HTTP/1.1 404 Not Found",
-     "Strict-Transport-Security: max-age=31536000; includeSubDomains",
-     ""];
+	  info:= Info, data := Data }) when (Method == "POST") and (Uri == "/upload") ->
+    %% io:format("info: ~n~p~n", [Info]),
+    case orddict:take("Filename", Info) of
+	{Filename, TailInfo} ->
+	    {Index, _} = orddict:take("Index", TailInfo),
+	    io:format("name: ~p ~p ~p ~n", [http_uri:decode(Filename), Index, length(Data)]),
+	    Resp = "[{\"status\": \"ok\"," ++ "\"index\": \"" ++ Index ++ "\""++ "}]",
+	    ["HTTP/1.1 200 OK",
+	     "Strict-Transport-Security: max-age=31536000; includeSubDomains",
+	     "Content-length: " ++ integer_to_list(length(Resp)),
+	     "Content-type: json/application",
+	     "",
+	     Resp
+	    ];
+	error ->
+	    ["HTTP/1.1 404 Not Found",
+	     "Strict-Transport-Security: max-age=31536000; includeSubDomains",
+	     ""]
+    end;
 handler(_) ->
     ["HTTP/1.1 404 Not Found",
      "Strict-Transport-Security: max-age=31536000; includeSubDomains",
