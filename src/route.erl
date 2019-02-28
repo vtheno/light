@@ -62,9 +62,14 @@ handler(#{uri := Uri, method := Method,
 	     Resp
 	    ];
 	error ->
-	    ["HTTP/1.1 404 Not Found",
+	    Resp = "[{\"status\": \"fail\"}]",
+	    ["HTTP/1.1 200 OK",
 	     "Strict-Transport-Security: max-age=31536000; includeSubDomains",
-	     ""]
+	     "Content-length: " ++ integer_to_list(length(Resp)),
+	     "Content-type: json/application",
+	     "",
+	     Resp
+	    ]
     end;
 handler(_) ->
     ["HTTP/1.1 404 Not Found",
