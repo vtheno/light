@@ -32,18 +32,6 @@ header_end("\n\r\n\r" ++ _) ->
 header_end(_) ->
     false.
 
-%% split_recv(ClientSock, Buff, Length) ->
-%%     case length(Buff) == Length of
-%%  	true ->
-%%  	    Buff;
-%%  	false ->
-%%  	    case ssl:recv(ClientSock, 0) of
-%%  		{ok, Data} ->
-%%  		    split_recv(ClientSock, Buff ++ Data, Length);
-%%  		{error, _} ->
-%% 		    []
-%% 	    end
-%%     end.
 size_recv(ClientSock, Size) ->
     case ssl:recv(ClientSock, Size) of
  	{ok, Data} ->
@@ -88,6 +76,7 @@ do_recv(ClientSock, Handler, Buff) ->
 				    Ctx = #{uri => Uri, method => Method,
 					    info => Info, version => Version,
 					    data => [] },
+				    %% io:format("non content: ~p ~n", [Ctx]),
 				    do_response(ClientSock, Handler, Ctx)
 			    end;
 			{error, _} ->

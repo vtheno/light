@@ -46,21 +46,51 @@ handler(#{uri := Uri, method := Method}) when Method == "GET" ->
 	     "Strict-Transport-Security: max-age=31536000; includeSubDomains",
 	     ""]
     end;
+%% require two steps , 
+%% step one, create hash file directory
+handler(#{uri := Uri, method := Method, 
+	  data := Data }) when (Method == "POST") and (Uri == "/access") ->
+    Bytes = orddict:from_list([list_to_tuple(string:split(X, ": ")) || X <- string:tokens(Data, "\n")]),
+    {Hash, _} = orddict:take("hash", Bytes),
+    ok = file:make_dir(?FILEROOT ++ Hash),
+    ok = file:write_file(?FILEROOT ++ Hash ++ "/config.ini", Data),
+    Resp = "[{\"status\": \"ok\"}]",
+    io:format("~p ~n", [Resp]),
+    ["HTTP/1.1 200 OK",
+     "Strict-Transport-Security: max-age=31536000; includeSubDomains",
+     "Content-length: " ++ integer_to_list(length(Resp)),
+     "Content-type: json/application",
+     "",
+     Resp
+    ];
+%% step two, upload file
 handler(#{uri := Uri, method := Method,
 	  info:= Info, data := Data }) when (Method == "POST") and (Uri == "/upload") ->
     %% io:format("info: ~n~p~n", [Info]),
-    case orddict:take("Filename", Info) of
+    case orddict:take("Hash", Info) of
 	{Filename, TailInfo} ->
-	    {Index, _} = orddict:take("Index", TailInfo),
+	    {Index, _} = orddict:take("Package", TailInfo),
 	    io:format("name: ~p ~p ~p ~n", [http_uri:decode(Filename), Index, length(Data)]),
-	    Resp = "[{\"status\": \"ok\"," ++ "\"index\": \"" ++ Index ++ "\""++ "}]",
-	    ["HTTP/1.1 200 OK",
-	     "Strict-Transport-Security: max-age=31536000; includeSubDomains",
-	     "Content-length: " ++ integer_to_list(length(Resp)),
-	     "Content-type: json/application",
-	     "",
-	     Resp
-	    ];
+	    case file:write_file(?FILEROOT ++ Filename ++ "/" ++ Index, Data) of
+		ok ->
+		    Resp = "[{\"status\": \"ok\"," ++ "\"index\": \"" ++ Index ++ "\""++ "}]",
+		    ["HTTP/1.1 200 OK",
+		     "Strict-Transport-Security: max-age=31536000; includeSubDomains",
+		     "Content-length: " ++ integer_to_list(length(Resp)),
+		     "Content-type: json/application",
+		     "",
+		     Resp
+		    ];
+		{error, _} -> 
+		    Resp = "[{\"status\": \"error\"}]",
+		    ["HTTP/1.1 200 OK",
+		     "Strict-Transport-Security: max-age=31536000; includeSubDomains",
+		     "Content-length: " ++ integer_to_list(length(Resp)),
+		     "Content-type: json/application",
+		     "",
+		     Resp
+		    ]
+	    end;
 	error ->
 	    Resp = "[{\"status\": \"fail\"}]",
 	    ["HTTP/1.1 200 OK",
